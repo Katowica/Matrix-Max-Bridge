@@ -1,0 +1,106 @@
+name: Lint & Security
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+    branches: ["main", "master"]
+
+jobs:
+  ruff:
+    name: Ruff (lint + format)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Lint
+        run: ruff check src/
+
+      - name: Format check
+        run: ruff format --check src/
+
+  tests:
+    name: Tests (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install dependencies
+        run: |
+          pip install -U pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      - name: Run tests
+        run: pytest tests/ -q
+
+  pip-audit:
+    name: Dependency audit (pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - run: pip install pip-audit
+      - run: pip-audit -r requirements.txt
+
+  bandit:
+    name: Bandit (security)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install bandit
+        run: pip install bandit[toml]
+
+      - name: Run bandit
+        run: bandit -r src/ -c .bandit.yaml --format json -o bandit-report.json --exit-zero
+
+      - name: Print bandit report
+        if: always()
+        run: |
+          if [ -f bandit-report.json ]; then
+            python - <<'EOF'
+          import json, sys
+          with open("bandit-report.json") as f:
+              r = json.load(f)
+          issues = r.get("results", [])
+          if not issues:
+              print("No security issues found.")
+              sys.exit(0)
+          for i in issues:
+              sev = i["issue_severity"]
+              conf = i["issue_confidence"]
+              text = i["issue_text"]
+              loc = f"{i['filename']}:{i['line_number']}"
+              print(f"[{sev}/{conf}] {loc}: {text}")
+          # Fail on HIGH severity
+          high = [i for i in issues if i["issue_severity"] == "HIGH"]
+          if high:
+              print(f"\n{len(high)} HIGH severity issue(s) found — failing.")
+              sys.exit(1)
+          EOF
+          fi
+
+      - name: Upload bandit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report
+          path: bandit-report.json
+          if-no-files-found: ignore

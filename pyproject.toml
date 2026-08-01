@@ -1,0 +1,61 @@
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+
+[project]
+name = "matrix-max-bridge"
+version = "0.2.0"
+description = "Двунаправленный мост текста/медиа между чатом Max и комнатой Matrix."
+requires-python = ">=3.14"
+
+[tool.ruff.lint]
+select = [
+    "E",   # ошибки pycodestyle
+    "W",   # предупреждения pycodestyle
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+    "S",   # flake8-bandit (подмножество — полный анализ выполняется отдельно bandit)
+    "T20", # flake8-print
+    "RUF", # правила ruff
+]
+ignore = [
+    "S101",  # использование assert — допустимо в не-тестовом коде здесь
+    "S104",  # привязка к 0.0.0.0 — неприменимо
+    "S311",  # random здесь не используется для криптографии
+    # Проект намеренно полностью русифицирован: комментарии, docstring'и и
+    # пользовательские строки содержат кириллицу. Правила RUF001/002/003
+    # предупреждают о сходных с латиницей кириллических символах, что для
+    # русскоязычного кода является ложноположительным срабатыванием.
+    "RUF001",  # сходные символы в строковых литералах
+    "RUF002",  # сходные символы в docstring
+    "RUF003",  # сходные символы в комментариях
+]
+
+[tool.ruff.lint.per-file-ignores]
+"src/__init__.py" = ["F401"]
+# strings.py содержит намеренный русский текст со сходными по начертанию символами
+"src/strings.py" = ["RUF001"]
+"tests/**/*.py" = ["S101", "S106", "S311", "PLR2004"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+filterwarnings = ["error"]
+pythonpath = ["."]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.bandit]
+targets = ["src"]
+severity = "medium"
+confidence = "medium"
+skips = ["B101", "B311"]

@@ -1,0 +1,19 @@
+.env
+.env.local
+data/
+*.db
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.venv/
+venv/
+.idea/
+.vscode/
+*.log
+.DS_Store
+# Tool caches / artifacts
+.ruff_cache/
+.pytest_cache/
+.bandit/
+bandit-report.json

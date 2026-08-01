@@ -1,0 +1,4 @@
+maxapi>=1.2.1,<2
+matrix-nio>=0.26.0,<0.27
+aiosqlite>=0.22.1
+pydantic-settings>=2.14.2

@@ -1,0 +1,15 @@
+targets:
+  - src
+
+severity: medium
+confidence: medium
+
+skips:
+  - B101  # инструкции assert
+  - B311  # random для не-криптографического использования
+  - B104  # health/metrics-эндпоинт намеренно слушает 0.0.0.0 внутри контейнера
+
+exclude_dirs:
+  - .venv
+  - venv
+  - __pycache__
